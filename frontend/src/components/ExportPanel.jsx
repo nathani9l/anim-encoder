@@ -1,8 +1,13 @@
-function StatCard({ label, value }) {
+import { Download, Loader2 } from "lucide-react";
+import { Button } from "./ui/button";
+import { Card, CardContent } from "./ui/card";
+import { Separator } from "./ui/separator";
+
+function StatBadge({ label, value }) {
   return (
-    <div style={{ background: "var(--bg)", borderRadius: "var(--radius-sm)", padding: "8px 10px" }}>
-      <div style={{ fontSize: 10, color: "var(--hint)", marginBottom: 2 }}>{label}</div>
-      <div style={{ fontSize: 15, fontWeight: 500 }}>{value}</div>
+    <div className="flex flex-col gap-0.5 rounded-md bg-muted px-3 py-2">
+      <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{label}</span>
+      <span className="text-sm font-medium tabular-nums">{value}</span>
     </div>
   );
 }
@@ -17,26 +22,44 @@ export default function ExportPanel({ frames, encoding, result, error, onEncode 
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <button className="primary" onClick={onEncode} disabled={!frames.length || encoding} style={{ width: "100%", padding: "10px 0", fontSize: 14 }}>
-        {encoding ? "Encoding on server…" : "Encode .uxuitelno"}
-      </button>
+    <div className="flex flex-col gap-3">
+      <Button
+        onClick={onEncode}
+        disabled={!frames.length || encoding}
+        className="w-full"
+        size="default"
+      >
+        {encoding ? (
+          <>
+            <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+            Encoding…
+          </>
+        ) : (
+          "Encode .uxuitelno"
+        )}
+      </Button>
+
       {error && (
-        <div style={{ fontSize: 12, color: "var(--muted)", background: "var(--surface)", border: "0.5px solid var(--border)", borderRadius: "var(--radius-sm)", padding: "8px 10px" }}>
-          Error: {error}
+        <div className="rounded-md border border-border bg-background px-3 py-2.5 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Error: </span>{error}
         </div>
       )}
+
       {result && (
-        <div style={{ background: "var(--surface)", border: "0.5px solid var(--border)", borderRadius: "var(--radius)", padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-            <StatCard label="Total" value={`${result.stats.sizeKb} KB`} />
-            <StatCard label="AVIF" value={`${result.stats.avifKb} KB`} />
-            <StatCard label="Grid" value={`${result.stats.cols}×${result.stats.rows}`} />
-          </div>
-          <button onClick={download} style={{ width: "100%", padding: "8px 0", fontSize: 13 }}>
-            Download animation.uxuitelno
-          </button>
-        </div>
+        <Card>
+          <CardContent className="pt-4 space-y-3">
+            <div className="grid grid-cols-3 gap-2">
+              <StatBadge label="Total" value={`${result.stats.sizeKb} KB`} />
+              <StatBadge label="AVIF" value={`${result.stats.avifKb} KB`} />
+              <StatBadge label="Grid" value={`${result.stats.cols}×${result.stats.rows}`} />
+            </div>
+            <Separator />
+            <Button variant="secondary" onClick={download} className="w-full" size="sm">
+              <Download className="mr-2 h-3.5 w-3.5" />
+              Download animation.uxuitelno
+            </Button>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

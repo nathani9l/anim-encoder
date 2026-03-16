@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Card, CardContent } from "./ui/card";
 
 export default function Preview({ frames, fps, loop }) {
   const canvasRef = useRef(null);
@@ -59,21 +60,23 @@ export default function Preview({ frames, fps, loop }) {
   }, [imgs, fps, loop]);
 
   return (
-    <div style={{ background: "var(--surface)", border: "0.5px solid var(--border)", borderRadius: "var(--radius)", minHeight: 160, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 12, gap: 10, overflow: "hidden" }}>
-      {imgs.length > 0 ? (
-        <>
-          <canvas ref={canvasRef} style={{ maxWidth: "100%", maxHeight: 200, borderRadius: 4 }} />
-          {info && (
-            <div style={{ fontSize: 11, color: "var(--hint)", display: "flex", gap: 12 }}>
-              <span>{info.w}×{info.h}px</span>
-              <span>{info.n} frames</span>
-              <span>{(info.n / fps).toFixed(1)}s</span>
-            </div>
-          )}
-        </>
-      ) : (
-        <span style={{ fontSize: 12, color: "var(--hint)" }}>Preview</span>
-      )}
-    </div>
+    <Card>
+      <CardContent className="flex flex-col items-center justify-center gap-3 py-5 min-h-[160px]">
+        {imgs.length > 0 ? (
+          <>
+            <canvas ref={canvasRef} className="max-w-full max-h-[220px] rounded" />
+            {info && (
+              <div className="flex gap-4 text-xs text-muted-foreground tabular-nums">
+                <span>{info.w}×{info.h}px</span>
+                <span>{info.n} frames</span>
+                <span>{(info.n / fps).toFixed(1)}s</span>
+              </div>
+            )}
+          </>
+        ) : (
+          <span className="text-xs text-muted-foreground">Preview</span>
+        )}
+      </CardContent>
+    </Card>
   );
 }

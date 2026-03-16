@@ -1,34 +1,40 @@
 import { useState } from "react";
-
-function Section({ title, children }) {
-  return (
-    <div style={{ marginBottom: 16 }}>
-      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", color: "var(--muted)", textTransform: "uppercase", marginBottom: 6 }}>
-        {title}
-      </div>
-      {children}
-    </div>
-  );
-}
+import { Check, Copy } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Separator } from "./ui/separator";
+import { cn } from "../lib/utils";
 
 function InfoRow({ label, value }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "3px 0", borderBottom: "0.5px solid var(--border)" }}>
-      <span style={{ color: "var(--muted)" }}>{label}</span>
-      <span style={{ fontFamily: "monospace", fontWeight: 500 }}>{value}</span>
+    <div className="flex justify-between text-xs py-1.5 border-b border-border last:border-0">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-mono font-medium">{value}</span>
     </div>
   );
 }
 
 function CodeBlock({ code, onCopy, copied }) {
   return (
-    <div style={{ position: "relative" }}>
-      <pre style={{ fontSize: 11, lineHeight: 1.7, color: "var(--muted)", whiteSpace: "pre-wrap", wordBreak: "break-word", background: "var(--bg)", border: "0.5px solid var(--border)", borderRadius: 6, padding: "10px 12px", margin: 0 }}>
+    <div className="relative">
+      <pre className="text-[11px] leading-relaxed text-muted-foreground whitespace-pre-wrap break-words bg-muted rounded-md p-3 font-mono">
         {code}
       </pre>
-      <button onClick={onCopy} style={{ position: "absolute", top: 6, right: 6, fontSize: 10, padding: "2px 7px", color: "var(--muted)" }}>
-        {copied ? "Copied!" : "Copy"}
+      <button
+        onClick={onCopy}
+        className="absolute top-2 right-2 flex items-center gap-1 rounded px-2 py-1 text-[10px] text-muted-foreground bg-background border border-border hover:text-foreground transition-colors"
+      >
+        {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+        {copied ? "Copied" : "Copy"}
       </button>
+    </div>
+  );
+}
+
+function Section({ title, children }) {
+  return (
+    <div className="space-y-2">
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{title}</p>
+      {children}
     </div>
   );
 }
@@ -38,11 +44,10 @@ function kotlinSpec(stats, fps, loop) {
   const fw = stats?.frameWidth ?? "W";
   const fh = stats?.frameHeight ?? "H";
   const cols = stats?.cols ?? "C";
-  const rows = stats?.rows ?? "R";
   const fpsVal = fps ?? 30;
   const loopVal = loop ?? true;
 
-  const decoder = `// 1. Read the file
+  return `// 1. Read the file
 val bytes = resources.openRawResource(R.raw.animation).readBytes()
 
 // 2. Parse manifest
@@ -76,8 +81,6 @@ val animator = ValueAnimator.ofInt(0, frameCount - 1).apply {
     addUpdateListener { imageView.setImageBitmap(getFrame(it.animatedValue as Int)) }
 }
 animator.start()`;
-
-  return decoder;
 }
 
 function swiftSpec(stats, fps, loop) {
@@ -88,7 +91,7 @@ function swiftSpec(stats, fps, loop) {
   const fpsVal = fps ?? 30;
   const loopVal = loop ?? true;
 
-  const decoder = `// 1. Read the file
+  return `// 1. Read the file
 let url = Bundle.main.url(forResource: "animation", withExtension: "uxuitelno")!
 let data = try! Data(contentsOf: url)
 
@@ -116,14 +119,11 @@ func getFrame(_ i: Int) -> UIImage {
     let row = i / cols
     let rect = CGRect(x: col * frameWidth, y: row * frameHeight,
                       width: frameWidth, height: frameHeight)
-    let cropped = sheet.cropping(to: rect)!
-    return UIImage(cgImage: cropped)
+    return UIImage(cgImage: sheet.cropping(to: rect)!)
 }
 
 // 5. Playback via CADisplayLink
 var frameIndex = 0
-var displayLink: CADisplayLink?
-
 displayLink = CADisplayLink(target: self, selector: #selector(tick))
 displayLink?.preferredFrameRateRange = .init(minimum: Float(fps),
                                               maximum: Float(fps), preferred: Float(fps))
@@ -136,8 +136,6 @@ displayLink?.add(to: .main, forMode: .common)
         if loop { frameIndex = 0 } else { displayLink?.invalidate() }
     }
 }`;
-
-  return decoder;
 }
 
 export default function CodeSnippet({ result, fps, loop }) {
@@ -155,46 +153,63 @@ export default function CodeSnippet({ result, fps, loop }) {
   const code = isKotlin ? kotlinSpec(stats, fps, loop) : swiftSpec(stats, fps, loop);
 
   return (
-    <div style={{ background: "var(--surface)", border: "0.5px solid var(--border)", borderRadius: "var(--radius)", padding: "1rem 1.25rem" }}>
+    <Card>
+      <CardHeader>
+        <CardTitle>Integration</CardTitle>
+      </CardHeader>
+      <Separator />
+      <CardContent className="pt-4 space-y-4">
+        {/* Tabs */}
+        <div className="flex gap-1 p-0.5 rounded-md bg-muted w-fit">
+          {[["kotlin", "Android"], ["swift", "iOS"]].map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={cn(
+                "px-3 py-1 text-xs rounded transition-colors",
+                tab === key
+                  ? "bg-background text-foreground shadow-sm font-medium"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
-      <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-        {[["kotlin", "Android / Kotlin"], ["swift", "iOS / Swift"]].map(([key, label]) => (
-          <button key={key} onClick={() => setTab(key)} style={{ fontSize: 11, padding: "3px 10px", background: tab === key ? "var(--bg)" : "transparent", fontWeight: tab === key ? 500 : 400, borderColor: tab === key ? "var(--border-focus)" : "var(--border)" }}>
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <Section title="Requirements">
-        <InfoRow label="Min OS version" value={isKotlin ? "Android 12 (API 31)" : "iOS 16"} />
-        <InfoRow label="AVIF decoder" value={isKotlin ? "BitmapFactory (built-in)" : "UIImage (built-in)"} />
-        <InfoRow label="Transparency" value="RGBA / alpha channel" />
-      </Section>
-
-      {stats && (
-        <Section title="File info">
-          <InfoRow label="Frames" value={stats.frameCount} />
-          <InfoRow label="Frame size" value={`${stats.frameWidth} × ${stats.frameHeight} px`} />
-          <InfoRow label="Grid" value={`${stats.cols} × ${stats.rows}`} />
-          <InfoRow label="FPS" value={fps} />
-          <InfoRow label="Loop" value={loop ? "yes" : "no"} />
-          <InfoRow label="File size" value={`${stats.sizeKb} KB`} />
-          <InfoRow label="AVIF sprite sheet" value={`${stats.avifKb} KB`} />
+        <Section title="Requirements">
+          <div className="rounded-md border border-border overflow-hidden">
+            <InfoRow label="Min OS" value={isKotlin ? "Android 12 (API 31)" : "iOS 16"} />
+            <InfoRow label="AVIF decoder" value={isKotlin ? "BitmapFactory" : "UIImage"} />
+            <InfoRow label="Transparency" value="RGBA / alpha channel" />
+          </div>
         </Section>
-      )}
 
-      <Section title=".uxuitelno format">
-        <CodeBlock
-          copied={false}
-          onCopy={() => copy("[4 bytes LE uint32] — manifest length\n[N bytes UTF-8]     — JSON manifest\n[remainder]         — AVIF sprite sheet (cols × rows)")}
-          code={"[4 bytes LE uint32] — manifest length\n[N bytes UTF-8]     — JSON manifest\n[remainder]         — AVIF sprite sheet (cols × rows)"}
-        />
-      </Section>
+        {stats && (
+          <Section title="File info">
+            <div className="rounded-md border border-border overflow-hidden">
+              <InfoRow label="Frames" value={stats.frameCount} />
+              <InfoRow label="Frame size" value={`${stats.frameWidth} × ${stats.frameHeight} px`} />
+              <InfoRow label="Grid" value={`${stats.cols} × ${stats.rows}`} />
+              <InfoRow label="FPS" value={fps} />
+              <InfoRow label="Loop" value={loop ? "yes" : "no"} />
+              <InfoRow label="File size" value={`${stats.sizeKb} KB`} />
+            </div>
+          </Section>
+        )}
 
-      <Section title={isKotlin ? "Decoder (Kotlin)" : "Decoder (Swift)"}>
-        <CodeBlock code={code} copied={copied} onCopy={() => copy(code)} />
-      </Section>
+        <Section title="Format">
+          <CodeBlock
+            copied={false}
+            onCopy={() => copy("[4 bytes LE uint32] — manifest length\n[N bytes UTF-8]     — JSON manifest\n[remainder]         — AVIF sprite sheet")}
+            code={"[4 bytes LE uint32] — manifest length\n[N bytes UTF-8]     — JSON manifest\n[remainder]         — AVIF sprite sheet (cols × rows)"}
+          />
+        </Section>
 
-    </div>
+        <Section title={isKotlin ? "Decoder — Kotlin" : "Decoder — Swift"}>
+          <CodeBlock code={code} copied={copied} onCopy={() => copy(code)} />
+        </Section>
+      </CardContent>
+    </Card>
   );
 }

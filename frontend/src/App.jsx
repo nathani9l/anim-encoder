@@ -4,15 +4,7 @@ import Preview from "./components/Preview";
 import Settings from "./components/Settings";
 import ExportPanel from "./components/ExportPanel";
 import CodeSnippet from "./components/CodeSnippet";
-
-const s = {
-  app: { maxWidth: 960, margin: "0 auto", padding: "2rem 1.5rem" },
-  header: { marginBottom: "1.75rem" },
-  title: { fontSize: 20, fontWeight: 500, letterSpacing: "-0.01em" },
-  subtitle: { fontSize: 13, color: "var(--muted)", marginTop: 3 },
-  grid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" },
-  col: { display: "flex", flexDirection: "column", gap: 12 },
-};
+import { Separator } from "./components/ui/separator";
 
 export default function App() {
   const [frames, setFrames] = useState([]);
@@ -48,22 +40,51 @@ export default function App() {
   }
 
   return (
-    <div style={s.app}>
-      <div style={s.header}>
-        <div style={s.title}>Anim Encoder</div>
-        <div style={s.subtitle}>PNG sequence → .uxuitelno (AVIF sprite sheet)</div>
-      </div>
-      <div style={s.grid}>
-        <div style={s.col}>
-          <DropZone frames={frames} onFrames={setFrames} />
-          <Preview frames={frames} fps={fps} loop={loop} />
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-5 w-5 rounded bg-foreground" />
+            <span className="text-sm font-semibold tracking-tight">anim-encoder</span>
+          </div>
+          <span className="text-xs text-muted-foreground">PNG → .uxuitelno</span>
         </div>
-        <div style={s.col}>
-          <Settings fps={fps} setFps={setFps} quality={quality} setQuality={setQuality} loop={loop} setLoop={setLoop} frames={frames} />
-          <ExportPanel frames={frames} fps={fps} encoding={encoding} result={result} error={error} onEncode={handleEncode} />
-          <CodeSnippet result={result} fps={fps} loop={loop} />
+      </header>
+
+      {/* Main */}
+      <main className="max-w-5xl mx-auto px-6 py-8">
+        <div className="mb-7">
+          <h1 className="text-xl font-semibold tracking-tight">Encode animation</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Convert a PNG frame sequence into a compact AVIF sprite sheet.
+          </p>
         </div>
-      </div>
+
+        <div className="grid grid-cols-2 gap-5 items-start">
+          <div className="flex flex-col gap-4">
+            <DropZone frames={frames} onFrames={setFrames} />
+            <Preview frames={frames} fps={fps} loop={loop} />
+          </div>
+          <div className="flex flex-col gap-4">
+            <Settings
+              fps={fps} setFps={setFps}
+              quality={quality} setQuality={setQuality}
+              loop={loop} setLoop={setLoop}
+              frames={frames}
+            />
+            <ExportPanel
+              frames={frames}
+              fps={fps}
+              encoding={encoding}
+              result={result}
+              error={error}
+              onEncode={handleEncode}
+            />
+            <CodeSnippet result={result} fps={fps} loop={loop} />
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
